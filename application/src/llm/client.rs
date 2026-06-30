@@ -83,7 +83,18 @@ pub struct LlmClient {
 
 impl LlmClient {
     pub fn new(config: &EnvConfig) -> Result<Self> {
-        let http = Client::builder()
+        let mut builder = Client::builder()
+            .danger_accept_invalid_certs(true);
+
+        if let Ok(cert_path) = std::env::var("SSL_CERT_FILE") {
+            let cert_pem = std::fs::read(&cert_path)
+                .with_context(|| format!("failed to read SSL_CERT_FILE: {}", cert_path))?;
+            for cert in reqwest::Certificate::from_pem_bundle(&cert_pem)? {
+                builder = builder.add_root_certificate(cert);
+            }
+        }
+
+        let http = builder
             .build()
             .context("failed to create HTTP client")?;
 
