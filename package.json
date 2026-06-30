@@ -1,0 +1,16 @@
+{
+  "name": "companion-app-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix application",
+    "dev:landing": "npm run dev --prefix landing",
+    "build": "npm run build --prefix application",
+    "build:landing": "npm run build --prefix landing",
+    "test": "npm test --prefix application",
+    "test:landing": "npm test --prefix landing",
+    "test:all": "npm test --prefix application && npm test --prefix landing",
+    "install:all": "npm install --prefix application && npm install --prefix landing",
+    "release": "node scripts/release.js"
+  }
+}
