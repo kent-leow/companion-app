@@ -9,9 +9,9 @@ If it needs decomposition, output a JSON array of sub-agent specs:
 [{"role": "<agent role>", "task": "<specific task for this agent>", "model_hint": "<model_id>"}]
 
 Model IDs available:
-- bedrock.claude-haiku-4-5 (simple/fast tasks)
-- bedrock.claude-sonnet-4-5 (standard tasks)
-- bedrock.claude-opus-4-6 (complex reasoning)
+- anthropic.claude-haiku-4-5-20251001-v1:0 (simple/fast tasks)
+- anthropic.claude-sonnet-4-5-20250929-v1:0 (standard tasks)
+- anthropic.claude-opus-4-6-v1 (complex reasoning)
 
 If the query is simple enough for a direct answer, output: []
 
