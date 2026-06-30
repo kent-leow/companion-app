@@ -33,7 +33,7 @@ fn complex_queries_detected() {
 fn model_hint_from_planner_is_respected() {
     let hints = vec![
         ("bedrock.claude-haiku-4-5", "haiku"),
-        ("bedrock.claude-sonnet-4-6", "sonnet"),
+        ("bedrock.claude-sonnet-4-5", "sonnet"),
         ("bedrock.claude-opus-4-6", "opus"),
     ];
 

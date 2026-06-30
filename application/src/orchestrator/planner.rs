@@ -10,7 +10,7 @@ If it needs decomposition, output a JSON array of sub-agent specs:
 
 Model IDs available:
 - bedrock.claude-haiku-4-5 (simple/fast tasks)
-- bedrock.claude-sonnet-4-6 (standard tasks)
+- bedrock.claude-sonnet-4-5 (standard tasks)
 - bedrock.claude-opus-4-6 (complex reasoning)
 
 If the query is simple enough for a direct answer, output: []

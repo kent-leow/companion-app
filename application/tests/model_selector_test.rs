@@ -1,7 +1,7 @@
 #[test]
 fn model_selector_defaults() {
     let haiku = "bedrock.claude-haiku-4-5";
-    let sonnet = "bedrock.claude-sonnet-4-6";
+    let sonnet = "bedrock.claude-sonnet-4-5";
     let opus = "bedrock.claude-opus-4-6";
 
     assert!(haiku.contains("haiku"));
@@ -13,7 +13,7 @@ fn model_selector_defaults() {
 fn model_ids_are_valid_format() {
     let models = [
         "bedrock.claude-haiku-4-5",
-        "bedrock.claude-sonnet-4-6",
+        "bedrock.claude-sonnet-4-5",
         "bedrock.claude-opus-4-6",
     ];
 
