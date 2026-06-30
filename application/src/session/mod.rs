@@ -3,7 +3,7 @@ pub mod context;
 pub use context::SessionContext;
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use uuid::Uuid;
 
 pub struct SessionManager {

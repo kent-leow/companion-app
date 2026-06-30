@@ -17,10 +17,10 @@ impl ModelSelector {
     pub fn from_config(config: &EnvConfig) -> Self {
         Self {
             haiku: std::env::var("ANTHROPIC_DEFAULT_HAIKU_MODEL")
-                .unwrap_or_else(|_| "bedrock.claude-haiku-4-5".to_string()),
+                .unwrap_or_else(|_| "claude-haiku-4-20250414".to_string()),
             sonnet: config.default_model.clone(),
             opus: std::env::var("ANTHROPIC_DEFAULT_OPUS_MODEL")
-                .unwrap_or_else(|_| "bedrock.claude-opus-4-6".to_string()),
+                .unwrap_or_else(|_| "claude-opus-4-20250514".to_string()),
         }
     }
 

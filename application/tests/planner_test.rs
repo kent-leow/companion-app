@@ -3,6 +3,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 struct SubAgentSpec {
     role: String,
+    #[allow(dead_code)]
     task: String,
     model_hint: String,
 }

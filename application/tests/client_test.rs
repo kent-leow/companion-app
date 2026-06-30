@@ -8,6 +8,7 @@ struct ChatChunk {
 #[derive(serde::Deserialize)]
 struct ChunkChoice {
     delta: Option<Delta>,
+    #[allow(dead_code)]
     finish_reason: Option<String>,
 }
 

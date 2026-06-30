@@ -6,7 +6,7 @@ pub use synthesizer::Synthesizer;
 
 use anyhow::Result;
 
-use crate::agent::{AgentPool, SubAgentSpec};
+use crate::agent::AgentPool;
 use crate::llm::{ChatMessage, LlmClient, ModelSelector, Complexity};
 
 pub struct Orchestrator {
