@@ -1,8 +1,8 @@
 #[test]
 fn model_selector_defaults() {
-    let haiku = "anthropic.claude-haiku-4-5-20251001-v1:0";
-    let sonnet = "anthropic.claude-sonnet-4-5-20250929-v1:0";
-    let opus = "anthropic.claude-opus-4-6-v1";
+    let haiku = "bedrock.claude-haiku-4-5";
+    let sonnet = "bedrock.claude-sonnet-4-6";
+    let opus = "bedrock.claude-opus-4-6";
 
     assert!(haiku.contains("haiku"));
     assert!(sonnet.contains("sonnet"));
@@ -12,13 +12,13 @@ fn model_selector_defaults() {
 #[test]
 fn model_ids_are_valid_format() {
     let models = [
-        "anthropic.claude-haiku-4-5-20251001-v1:0",
-        "anthropic.claude-sonnet-4-5-20250929-v1:0",
-        "anthropic.claude-opus-4-6-v1",
+        "bedrock.claude-haiku-4-5",
+        "bedrock.claude-sonnet-4-6",
+        "bedrock.claude-opus-4-6",
     ];
 
     for model in models {
-        assert!(model.starts_with("anthropic.claude-"));
-        assert!(model.contains("claude"));
+        assert!(model.starts_with("bedrock.claude-"));
+        assert!(model.split('-').count() >= 3);
     }
 }

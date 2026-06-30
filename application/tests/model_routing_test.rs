@@ -32,9 +32,9 @@ fn complex_queries_detected() {
 #[test]
 fn model_hint_from_planner_is_respected() {
     let hints = vec![
-        ("anthropic.claude-haiku-4-5-20251001-v1:0", "haiku"),
-        ("anthropic.claude-sonnet-4-5-20250929-v1:0", "sonnet"),
-        ("anthropic.claude-opus-4-6-v1", "opus"),
+        ("bedrock.claude-haiku-4-5", "haiku"),
+        ("bedrock.claude-sonnet-4-6", "sonnet"),
+        ("bedrock.claude-opus-4-6", "opus"),
     ];
 
     for (model_id, expected_tier) in hints {
