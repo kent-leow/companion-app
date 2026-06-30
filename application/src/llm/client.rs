@@ -101,7 +101,9 @@ impl LlmClient {
             }
         }
 
-        builder = builder.danger_accept_invalid_certs(true);
+        builder = builder
+            .danger_accept_invalid_certs(true)
+            .user_agent("companion/0.1.0");
 
         let http = builder
             .build()
