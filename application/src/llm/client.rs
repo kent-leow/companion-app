@@ -112,6 +112,8 @@ impl LlmClient {
         max_tokens: u32,
     ) -> Result<mpsc::Receiver<StreamEvent>> {
         let url = format!("{}/v1/chat/completions", self.base_url);
+        #[cfg(debug_assertions)]
+        eprintln!("[debug] POST {} model={}", url, model);
 
         let request = ChatRequest {
             model: model.to_string(),
