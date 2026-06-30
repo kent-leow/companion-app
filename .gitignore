@@ -5,3 +5,12 @@ dist/
 *.log
 .DS_Store
 thumbs.db
+
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Session data
+.sessions/

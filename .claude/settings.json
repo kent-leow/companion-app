@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(cat ~/.claude/settings.json 2>/dev/null | grep -A5 \"api\\\\|bedrock\\\\|model\\\\|aws\" 2>/dev/null; echo \"---\"; env | grep -i \"AWS_\\\\|BEDROCK\\\\|ANTHROPIC\" 2>/dev/null | sed 's/=.*/=***/')",
+      "Read(//Users/a2456813/.claude/**)",
+      "WebFetch(domain:platform.ai.tech.gov.sg)"
     ]
   }
 }
