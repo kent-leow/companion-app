@@ -16,7 +16,7 @@ impl EnvConfig {
             .context("ANTHROPIC_AUTH_TOKEN not set")?;
 
         let default_model = std::env::var("ANTHROPIC_DEFAULT_SONNET_MODEL")
-            .unwrap_or_else(|_| "bedrock.claude-sonnet-4-5".to_string());
+            .unwrap_or_else(|_| "bedrock.claude-sonnet-4-0".to_string());
 
         Ok(Self {
             base_url,

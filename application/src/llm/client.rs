@@ -83,16 +83,25 @@ pub struct LlmClient {
 
 impl LlmClient {
     pub fn new(config: &EnvConfig) -> Result<Self> {
-        let mut builder = Client::builder()
-            .danger_accept_invalid_certs(true);
+        let mut builder = Client::builder();
 
-        if let Ok(cert_path) = std::env::var("SSL_CERT_FILE") {
-            let cert_pem = std::fs::read(&cert_path)
-                .with_context(|| format!("failed to read SSL_CERT_FILE: {}", cert_path))?;
-            for cert in reqwest::Certificate::from_pem_bundle(&cert_pem)? {
-                builder = builder.add_root_certificate(cert);
+        let cert_path = std::env::var("SSL_CERT_FILE").ok().or_else(|| {
+            let home = std::env::var("HOME").ok()?;
+            let path = format!("{}/.config/.cloudflare/combined-ca.pem", home);
+            if std::path::Path::new(&path).exists() { Some(path) } else { None }
+        });
+
+        if let Some(path) = &cert_path {
+            if let Ok(pem) = std::fs::read(path) {
+                if let Ok(certs) = reqwest::Certificate::from_pem_bundle(&pem) {
+                    for cert in certs {
+                        builder = builder.add_root_certificate(cert);
+                    }
+                }
             }
         }
+
+        builder = builder.danger_accept_invalid_certs(true);
 
         let http = builder
             .build()
