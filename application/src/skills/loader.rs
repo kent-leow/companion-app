@@ -16,6 +16,12 @@ pub struct SkillRegistry {
 }
 
 impl SkillRegistry {
+    pub fn empty() -> Self {
+        Self {
+            skills: HashMap::new(),
+        }
+    }
+
     pub fn load_from_dir(skills_dir: &Path) -> Result<Self> {
         let mut skills = HashMap::new();
 

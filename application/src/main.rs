@@ -10,7 +10,9 @@ mod skills;
 mod tui;
 
 use clap::Parser;
-use llm::{ChatMessage, LlmClient, StreamEvent};
+use llm::{ChatMessage, LlmClient, ModelSelector, StreamEvent};
+use orchestrator::Orchestrator;
+use skills::loader::SkillRegistry;
 use tui::{InputEvent, InputHandler, OutputRenderer};
 
 #[derive(Parser)]
@@ -30,11 +32,23 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| std::env::current_dir().unwrap());
 
-    let core_content = config::load_core_md(&std::env::current_dir().unwrap_or(exe_dir))
-        .unwrap_or_else(|_| String::new());
+    let base_dir = std::env::current_dir().unwrap_or(exe_dir);
+    let core_content =
+        config::load_core_md(&base_dir).unwrap_or_else(|_| String::new());
+
+    let skills_dir = base_dir.join("skills");
+    let skill_registry =
+        SkillRegistry::load_from_dir(&skills_dir).unwrap_or_else(|_| {
+            SkillRegistry::load_from_dir(&std::path::PathBuf::from("skills"))
+                .unwrap_or_else(|_| SkillRegistry::empty())
+        });
 
     let client = LlmClient::new(&env_config)?;
     let model = &env_config.default_model;
+    let model_selector = ModelSelector::from_config(&env_config);
+
+    let orchestrator =
+        Orchestrator::new(client.clone(), model_selector, core_content.clone(), skill_registry);
 
     tui::show_splash();
 
@@ -53,35 +67,46 @@ async fn main() -> anyhow::Result<()> {
             InputEvent::Message(parsed) => {
                 history.push(ChatMessage::user(&parsed.text));
 
-                let mut rx = match client.chat_stream(model, &history, 4096).await {
-                    Ok(rx) => rx,
-                    Err(e) => {
-                        OutputRenderer::print_error(&e.to_string());
-                        history.pop();
-                        continue;
+                match orchestrator.handle(&history).await {
+                    Ok(response) => {
+                        OutputRenderer::print_token(&response);
+                        OutputRenderer::print_done();
+                        history.push(ChatMessage::assistant(&response));
                     }
-                };
+                    Err(_) => {
+                        // Fallback to direct streaming on orchestrator error
+                        let mut rx = match client.chat_stream(model, &history, 4096).await
+                        {
+                            Ok(rx) => rx,
+                            Err(e) => {
+                                OutputRenderer::print_error(&e.to_string());
+                                history.pop();
+                                continue;
+                            }
+                        };
 
-                let mut full_response = String::new();
-                while let Some(event) = rx.recv().await {
-                    match event {
-                        StreamEvent::Token(t) => {
-                            OutputRenderer::print_token(&t);
-                            full_response.push_str(&t);
+                        let mut full_response = String::new();
+                        while let Some(event) = rx.recv().await {
+                            match event {
+                                StreamEvent::Token(t) => {
+                                    OutputRenderer::print_token(&t);
+                                    full_response.push_str(&t);
+                                }
+                                StreamEvent::Done(_) => {
+                                    OutputRenderer::print_done();
+                                    break;
+                                }
+                                StreamEvent::Error(e) => {
+                                    OutputRenderer::print_error(&e);
+                                    break;
+                                }
+                            }
                         }
-                        StreamEvent::Done(_) => {
-                            OutputRenderer::print_done();
-                            break;
-                        }
-                        StreamEvent::Error(e) => {
-                            OutputRenderer::print_error(&e);
-                            break;
+
+                        if !full_response.is_empty() {
+                            history.push(ChatMessage::assistant(&full_response));
                         }
                     }
-                }
-
-                if !full_response.is_empty() {
-                    history.push(ChatMessage::assistant(&full_response));
                 }
             }
         }

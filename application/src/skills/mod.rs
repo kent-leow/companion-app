@@ -1,4 +1,4 @@
 pub mod executor;
 pub mod loader;
 
-pub use loader::Skill;
+pub use loader::{Skill, SkillRegistry};

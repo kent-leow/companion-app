@@ -11,6 +11,8 @@ pub struct SubAgentSpec {
     pub role: String,
     pub task: String,
     pub model_hint: String,
+    #[serde(default)]
+    pub skill: Option<String>,
 }
 
 #[derive(Debug, Clone)]
