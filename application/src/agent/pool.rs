@@ -41,7 +41,15 @@ impl AgentPool {
                         .unwrap_or_default();
 
                     let system_prompt = format!(
-                        "{}\n\n## Skill: {}\n\n{}\n\n## Preflight Output\n{}",
+                        "{}\n\n## Skill: {}\n\n{}\n\n## Preflight Output\n{}\n\n\
+                        ## CRITICAL INSTRUCTIONS\n\
+                        You CANNOT execute commands. You do NOT have shell access.\n\
+                        Based on the skill instructions above, tell the user:\n\
+                        1. What the skill can do for their request\n\
+                        2. What credentials/setup are needed (based on preflight output)\n\
+                        3. The exact commands they would need to run\n\
+                        NEVER pretend you executed a command or fabricate API responses.\n\
+                        NEVER invent data you did not receive. If you lack information, say so.",
                         core, skill.name, skill.prompt, preflight
                     );
                     let messages = vec![
