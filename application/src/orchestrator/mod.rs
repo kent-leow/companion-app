@@ -48,13 +48,13 @@ impl Orchestrator {
         match route.as_str() {
             "SEARCH" => self.handle_with_skill(history, "web-search").await,
             "DECOMPOSE" => {
-                let skill_names = self.skills.list();
+                let skill_descs = self.skills.list_with_descriptions();
                 let plan = Planner::plan(
                     &self.client,
                     self.model_selector.select(Complexity::Medium),
                     &self.core_context,
                     &user_msg,
-                    &skill_names,
+                    &skill_descs,
                 )
                 .await?;
 
@@ -95,6 +95,31 @@ impl Orchestrator {
             let role = if msg.role == crate::llm::Role::User { "User" } else { "Assistant" };
             let content = msg.content.as_str().unwrap_or_default();
             context.push_str(&format!("{}: {}\n", role, content));
+        }
+
+        let user_msg = history
+            .iter()
+            .rev()
+            .find(|m| m.role == crate::llm::Role::User)
+            .and_then(|m| m.content.as_str())
+            .unwrap_or_default();
+        let lower = user_msg.to_lowercase();
+
+        let skill_patterns: &[&str] = &[
+            "gitlab",
+            "sgts.gitlab-dedicated.com",
+            "merge_request",
+            "merge request",
+            "figma.com",
+            "figma design",
+            "jira",
+            "atlassian.net",
+            "vulnerability",
+            "vulnerabilities",
+            "security scan",
+        ];
+        if skill_patterns.iter().any(|p| lower.contains(p)) {
+            return Ok("DECOMPOSE".to_string());
         }
 
         let search_option = if has_search {

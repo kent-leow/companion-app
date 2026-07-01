@@ -59,6 +59,13 @@ impl SkillRegistry {
         self.skills.keys().map(|s| s.as_str()).collect()
     }
 
+    pub fn list_with_descriptions(&self) -> Vec<(&str, &str)> {
+        self.skills
+            .values()
+            .map(|s| (s.name.as_str(), s.description.as_str()))
+            .collect()
+    }
+
     fn parse_skill(path: &Path) -> Result<Skill> {
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("failed to read {}", path.display()))?;

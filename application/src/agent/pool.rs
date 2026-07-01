@@ -2,11 +2,11 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 use crate::agent::{PromptBuilder, SubAgentResult, SubAgentSpec};
-use crate::llm::LlmClient;
+use crate::llm::{ChatMessage, LlmClient};
 use crate::skills::executor::SkillExecutor;
 use crate::skills::loader::SkillRegistry;
 
-const AGENT_TIMEOUT: Duration = Duration::from_secs(30);
+const AGENT_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub struct AgentPool {
     client: LlmClient,
@@ -37,13 +37,31 @@ impl AgentPool {
 
             let handle = tokio::spawn(async move {
                 if let Some(skill) = skill_data {
-                    match SkillExecutor::execute(&skill, &spec.task) {
-                        Ok(output) => Some(SubAgentResult {
+                    let preflight = SkillExecutor::execute(&skill, &spec.task)
+                        .unwrap_or_default();
+
+                    let system_prompt = format!(
+                        "{}\n\n## Skill: {}\n\n{}\n\n## Preflight Output\n{}",
+                        core, skill.name, skill.prompt, preflight
+                    );
+                    let messages = vec![
+                        ChatMessage::system(&system_prompt),
+                        ChatMessage::user(&spec.task),
+                    ];
+                    let model = &spec.model_hint;
+                    let result =
+                        timeout(AGENT_TIMEOUT, client.chat(model, &messages, 4096)).await;
+                    match result {
+                        Ok(Ok(output)) => Some(SubAgentResult {
                             role: spec.role,
                             output,
                         }),
-                        Err(e) => {
-                            eprintln!("[agent:{}] skill error: {}", spec.role, e);
+                        Ok(Err(e)) => {
+                            eprintln!("[agent:{}] skill-llm error: {}", spec.role, e);
+                            None
+                        }
+                        Err(_) => {
+                            eprintln!("[agent:{}] skill-llm timeout", spec.role);
                             None
                         }
                     }

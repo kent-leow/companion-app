@@ -13,14 +13,20 @@ Model IDs available:
 - bedrock.claude-sonnet-4-6 (standard tasks)
 - bedrock.claude-opus-4-6 (complex reasoning)
 
-If the query is simple enough for a direct answer, output: []
+If the query is simple enough for a direct answer AND no skill matches, output: []
 
 Rules:
 - Max 5 sub-agents
 - Each agent should have a clear, focused task
 - Use haiku for simple lookups, sonnet for analysis, opus for deep reasoning
-- If a task can be handled by a skill, set "skill" to the skill name (the agent will execute it)
+- CRITICAL: If a user's request involves a URL, topic, or action that matches a skill, you MUST assign that skill. NEVER output [] when a skill matches.
 - For real-time info (news, scores, weather, prices), USE the web-search skill
+- For GitLab URLs, MRs, merge requests, or code review → use git-apis or gitlab-mr-automation
+- For Figma URLs or design references → use figma-design-context
+- For Jira tickets, issues, or story points → use jira-ticket
+- For vulnerability reports or security scanning → use fix-vulnerabilities
+- For git workflow (branch, commit, push, MR creation) → use git-workflow or gitlab-mr-automation
+- When assigning a skill, pass the FULL user query (including URLs) as the agent's "task"
 - Output ONLY valid JSON, no explanation"#;
 
 pub struct Planner;
@@ -31,16 +37,16 @@ impl Planner {
         model: &str,
         core_context: &str,
         user_query: &str,
-        available_skills: &[&str],
+        available_skills: &[(&str, &str)],
     ) -> Result<Vec<SubAgentSpec>> {
         let skills_section = if available_skills.is_empty() {
             String::new()
         } else {
             format!(
-                "\n\nAvailable skills (use these for tasks they can handle):\n{}",
+                "\n\nAvailable skills (ALWAYS use a skill when the query matches one):\n{}",
                 available_skills
                     .iter()
-                    .map(|s| format!("- {}", s))
+                    .map(|(name, desc)| format!("- {} — {}", name, desc))
                     .collect::<Vec<_>>()
                     .join("\n")
             )
