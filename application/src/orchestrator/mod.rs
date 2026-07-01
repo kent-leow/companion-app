@@ -111,14 +111,28 @@ impl Orchestrator {
 
         let search_query = self.extract_search_query(query).await?;
         let raw_results =
-            crate::skills::executor::SkillExecutor::execute(skill, &search_query)?;
+            crate::skills::executor::SkillExecutor::execute(skill, &search_query)
+                .unwrap_or_else(|e| format!("ERROR: search failed: {}", e));
 
-        let messages = vec![
-            ChatMessage::system(&format!(
+        let has_results = !raw_results.is_empty()
+            && !raw_results.contains("ERROR")
+            && !raw_results.contains("unavailable");
+
+        let system_prompt = if has_results {
+            format!(
                 "{}\n\n{}\n\nUser asked: {}\n\nSearch results:\n{}",
                 &self.core_context, &skill.prompt, query, raw_results
-            )),
-            ChatMessage::user("Synthesize the search results to answer the user's question. If results are insufficient, say so."),
+            )
+        } else {
+            format!(
+                "{}\n\nUser asked: {}\n\nWeb search was attempted but failed (network restriction or rate limit). You MUST:\n1. Acknowledge you cannot fetch live results right now\n2. Provide whatever relevant knowledge you have (with caveat it may be outdated)\n3. Suggest where the user can check for live info",
+                &self.core_context, query
+            )
+        };
+
+        let messages = vec![
+            ChatMessage::system(&system_prompt),
+            ChatMessage::user("Answer the user's question based on the available information."),
         ];
 
         let model = self.model_selector.select(Complexity::Medium);
