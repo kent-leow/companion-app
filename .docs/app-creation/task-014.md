@@ -1,22 +1,29 @@
-# Task 014 — Polish + performance optimization
+# Task 014 — Integration & Entry Point
 
 ## Goal
-Final polish: ensure startup < 200ms, responses are ultra-concise, error handling is clean.
+Wire all modules together: CLI entry point with session init, @-tag file injection, image paste support, and the full interactive prompt loop.
 
 ## Prerequisites
-- [x] task-005 (chat loop)
-- [x] task-006 (orchestrator)
-- [x] task-009 (memory)
+- [ ] task-007 (TUI)
+- [ ] task-008 (orchestrator)
+- [ ] task-009 (sub-agents)
+- [ ] task-010 (memory)
+- [ ] task-011 (sessions)
+- [ ] task-012 (default skills)
 
 ## Tasks
-- [x] perf: Profile startup time, optimize cold start (lazy loading, parallel init) — `application/src/main.rs`
-- [x] output: Enforce concise output formatting (≤3 sentences by default via core.md) — `application/core.md`
-- [x] error: Graceful error handling (network failures, rate limits, invalid input) — `application/src/llm/client.rs`
-- [x] tui: Loading indicators, typing animation during LLM response — `application/src/tui/output.rs`
-- [x] test: Startup benchmark < 200ms — `application/tests/perf_test.rs`
+- [ ] entry: Wire CLI entry point — init config, load skills, create session, show splash, start prompt loop — `application/src/index.ts`
+- [ ] input: Implement @-tag file content injection (detect @path → read file → append to user message) — `application/src/tui/input.ts`
+- [ ] input: Implement image paste detection (base64 encode → multimodal message content part) — `application/src/tui/input.ts`
+- [ ] integration: Connect TUI input → orchestrator.run() → TUI streaming output — `application/src/index.ts`
+- [ ] integration: Wire memory load at session start, update after each turn — `application/src/index.ts`
+- [ ] test: @-tag extracts path and injects file content into message — `application/tests/integration.test.ts`
+- [ ] test: Full turn: user input → orchestrator → streamed response displayed — `application/tests/integration.test.ts`
 
 ## Done When
-- `cargo build --release` binary starts in < 200ms
-- All errors show user-friendly messages (no panics)
-- Rate limit (429) triggers exponential backoff
-- Loading state visible during LLM calls
+- `npx tsx src/index.ts` starts full interactive session (splash → prompt → response)
+- @src/file.ts in input reads file and appends content to LLM context
+- Image paste (if terminal supports) encodes as base64 multimodal content
+- Memory persists between turns within a session
+- Startup time < 500ms
+- All tests pass

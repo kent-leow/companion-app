@@ -1,18 +1,23 @@
-# Task 004 — Core.md + config loading
+# Task 004 — Skill Schema, Loader & Registry
 
 ## Goal
-Implement `core.md` loading at session start and injection as system context into all LLM calls.
+Implement the skill system: YAML frontmatter schema types, skill.md parser, and in-memory skill registry with trigger index.
 
 ## Prerequisites
-- [x] task-002 (LLM client)
+- [ ] task-001 (project scaffolding, package.json for `yaml` dep)
 
 ## Tasks
-- [x] config: core.md loader (read from disk, validate exists) — `application/src/config/mod.rs`
-- [x] content: Create initial core.md with general-purpose agent instructions — `application/core.md`
-- [x] llm: Inject core.md content as system message in every LLM call — `application/src/llm/client.rs`
-- [x] test: Verify core.md is loaded and present in request payload — `application/tests/config_test.rs`
+- [ ] skills: Define SkillDef TypeScript interface (name, version, description, triggers, parameters, auth, commands) — `application/src/skills/schema.ts`
+- [ ] skills: Implement skill.md YAML frontmatter parser → SkillDef — `application/src/skills/loader.ts`
+- [ ] skills: Implement skill registry (scan directory, load all skills, build triggerMap) — `application/src/skills/index.ts`
+- [ ] skills: Generate "Available Tools" section string from loaded skills — `application/src/skills/index.ts`
+- [ ] test: Loader parses valid skill.md into correct SkillDef shape — `application/tests/skill-loader.test.ts`
+- [ ] test: Registry builds triggerMap from multiple skills — `application/tests/skill-registry.test.ts`
+- [ ] test: Registry generates Available Tools prompt section — `application/tests/skill-registry.test.ts`
 
 ## Done When
-- `core.md` is read at startup
-- Every LLM request includes core.md as system message
-- Missing core.md produces clear error
+- `loadSkill('path/to/skill.md')` returns typed SkillDef with all frontmatter fields
+- `SkillRegistry.loadAll('skills/')` populates skills map and triggerMap
+- `registry.getToolsPromptSection()` returns formatted string listing all skills with descriptions and params
+- Auth warnings logged for skills with missing env vars
+- All tests pass

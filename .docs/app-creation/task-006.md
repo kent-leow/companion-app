@@ -1,26 +1,23 @@
-# Task 006 — Orchestrator + dynamic sub-agent spawning
+# Task 006 — Context Manager
 
 ## Goal
-Implement the orchestrator that decomposes complex queries into sub-tasks and dynamically spawns role-prompted sub-agents.
+Implement the rolling conversation summary system that provides concise context to each LLM call without sending full history.
 
 ## Prerequisites
-- [x] task-002 (LLM client)
-- [x] task-004 (core.md loading)
+- [ ] task-002 (LLM client for summarization calls)
 
 ## Tasks
-- [x] orchestrator: Core orchestrator logic (detect simple vs complex query) — `application/src/orchestrator/mod.rs`
-- [x] orchestrator: Planner — LLM call that outputs `[{role, task, model_hint}]` JSON — `application/src/orchestrator/planner.rs`
-- [x] orchestrator: Synthesizer — merge sub-agent outputs into concise response — `application/src/orchestrator/synthesizer.rs`
-- [x] agent: Dynamic sub-agent spawner (tokio tasks) — `application/src/agent/mod.rs`
-- [x] agent: Async agent pool with timeout/cancellation — `application/src/agent/pool.rs`
-- [x] agent: Prompt builder (core.md + role prompt construction) — `application/src/agent/prompt_builder.rs`
-- [x] test: Planner outputs valid JSON sub-task array — `application/tests/planner_test.rs`
-- [x] test: Pool spawns N agents concurrently and collects results — `application/tests/pool_test.rs`
-- [x] test: Orchestrator end-to-end (plan → spawn → synthesize) — `application/tests/orchestrator_test.rs`
+- [ ] context: Define ConversationSummary interface (summary, lastUserMessage, lastAssistantResponse, turnCount) — `application/src/orchestrator/context-manager.ts`
+- [ ] context: Implement `updateSummary()` — if turnCount < 4: keep raw messages; if >= 4: LLM-summarize prior turns — `application/src/orchestrator/context-manager.ts`
+- [ ] context: Implement `getContextForPrompt()` — returns formatted context string (≤2K tokens) — `application/src/orchestrator/context-manager.ts`
+- [ ] context: Implement token counting for summary cap (using tiktoken or char approximation) — `application/src/orchestrator/context-manager.ts`
+- [ ] test: First 3 turns return raw messages as context — `application/tests/context-manager.test.ts`
+- [ ] test: Turn 4+ triggers summarization and caps at 2K tokens — `application/tests/context-manager.test.ts`
+- [ ] test: getContextForPrompt returns formatted string with summary + last exchange — `application/tests/context-manager.test.ts`
 
 ## Done When
-- Simple queries bypass orchestration (direct to LLM)
-- Complex queries decompose into sub-tasks
-- Sub-agents spawn concurrently with role prompts + core.md
-- Results are synthesized into single concise answer
-- Timeout kills stalled sub-agents
+- Context manager tracks conversation turns and produces rolling summary
+- After 4+ turns, summary is condensed via LLM call
+- Context string never exceeds 2K tokens (~8000 chars)
+- Sub-agents receive 50-200 token context summary, not full history
+- All tests pass

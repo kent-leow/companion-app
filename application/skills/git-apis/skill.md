@@ -1,16 +1,51 @@
+---
+name: git-apis
+version: "1.0.0"
+description: "GitLab + GitHub REST API: fetch discussions, post comments, reply, resolve threads, approve MR/PR"
+triggers:
+  - "gitlab"
+  - "github"
+  - "merge request"
+  - "pull request"
+  - "MR"
+  - "PR"
+  - "review comments"
+  - "approve"
+  - "resolve thread"
+  - "post comment"
+  - "discussions"
+parameters:
+  - name: query
+    type: string
+    required: true
+    description: "Full user request including URLs and context"
+auth:
+  - env: GITLAB_TOKEN
+    description: "GitLab personal access token"
+  - env: GITHUB_TOKEN
+    description: "GitHub personal access token"
+commands:
+  - name: preflight
+    template: |
+      echo "GitLab: $([ -n "$GITLAB_TOKEN" ] && echo OK || echo MISSING)"
+      echo "GitHub: $([ -n "$GITHUB_TOKEN" ] && echo OK || echo MISSING)"
+    timeout: 5
+---
+
 # git-apis
 
-Shared GitLab + GitHub REST API operations: fetch discussions, post inline/general comments, reply, resolve threads, approve MR/PR.
+Git platform API specialist. Execute API operations via curl.
 
-## Commands
+## Operations
 
-```sh
-echo "GitLab: $([ -n "$GITLAB_TOKEN" ] && echo OK || echo MISSING)" && echo "GitHub: $([ -n "$GITHUB_TOKEN" ] && echo OK || echo MISSING)" && echo "Query: {query}"
-```
-
-## Prompt
-
-You are a Git platform API specialist. Given a user request, execute the appropriate API operation below.
+| Operation | Description |
+|-----------|-------------|
+| FETCH_DISCUSSIONS | Get all MR/PR discussions (paginated) |
+| POST_INLINE | Post inline comment on a diff line |
+| POST_GENERAL | Post general comment |
+| REPLY | Reply to an existing thread |
+| RESOLVE | Mark thread as resolved |
+| APPROVE | Approve the MR/PR |
 
 ## Auth Headers
 
@@ -19,124 +54,4 @@ You are a Git platform API specialist. Given a user request, execute the appropr
 | GitLab | `PRIVATE-TOKEN: $GITLAB_TOKEN` |
 | GitHub | `Authorization: Bearer $GITHUB_TOKEN` |
 
----
-
-## FETCH_DISCUSSIONS
-
-Fetch all MR/PR discussions.
-
-**GitLab:**
-```bash
-DISCUSSIONS=$(curl -s -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/discussions?per_page=100")
-```
-
-**GitHub:**
-```bash
-REVIEW_COMMENTS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-  "https://api.github.com/repos/<owner>/<repo>/pulls/<PR_ID>/comments?per_page=100")
-ISSUE_COMMENTS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-  "https://api.github.com/repos/<owner>/<repo>/issues/<PR_ID>/comments?per_page=100")
-```
-
----
-
-## POST_INLINE
-
-Post inline comment on a diff line.
-
-**GitLab:**
-```bash
-curl -s -X POST -H "PRIVATE-TOKEN: $GITLAB_TOKEN" -H "Content-Type: application/json" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/discussions" \
-  -d '{"body":"<comment>","position":{"position_type":"text","base_sha":"'"$BASE_SHA"'","start_sha":"'"$BASE_SHA"'","head_sha":"'"$HEAD_SHA"'","old_path":"<file>","new_path":"<file>","new_line":<N>}}'
-```
-Line range: replace `"new_line":<N>` with `"line_range":{"start":{"type":"new","new_line":<S>},"end":{"type":"new","new_line":<E>}}`
-
-**GitHub:**
-```bash
-curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-  "https://api.github.com/repos/<owner>/<repo>/pulls/<PR_ID>/comments" \
-  -d '{"body":"<comment>","commit_id":"'"$HEAD_SHA"'","path":"<file>","line":<N>,"side":"RIGHT"}'
-```
-Line range: add `"start_line":<S>,"start_side":"RIGHT"`
-
----
-
-## POST_GENERAL
-
-Post general (non-inline) comment.
-
-**GitLab:**
-```bash
-curl -s -X POST -H "PRIVATE-TOKEN: $GITLAB_TOKEN" -H "Content-Type: application/json" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/notes" \
-  -d '{"body":"<comment>"}'
-```
-
-**GitHub:**
-```bash
-curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-  "https://api.github.com/repos/<owner>/<repo>/issues/<PR_ID>/comments" \
-  -d '{"body":"<comment>"}'
-```
-
----
-
-## REPLY
-
-Reply to an existing thread.
-
-**GitLab:**
-```bash
-curl -s -X POST -H "PRIVATE-TOKEN: $GITLAB_TOKEN" -H "Content-Type: application/json" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/discussions/<discussion_id>/notes" \
-  -d '{"body":"<reply>"}'
-```
-
-**GitHub:**
-```bash
-curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-  "https://api.github.com/repos/<owner>/<repo>/pulls/<PR_ID>/comments" \
-  -d '{"body":"<reply>","commit_id":"'"$HEAD_SHA"'","in_reply_to":<original_comment_id>}'
-```
-
----
-
-## RESOLVE
-
-Mark thread as resolved.
-
-**GitLab:**
-```bash
-curl -s -X PUT -H "PRIVATE-TOKEN: $GITLAB_TOKEN" -H "Content-Type: application/json" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/discussions/<discussion_id>" \
-  -d '{"resolved":true}'
-```
-
-**GitHub (GraphQL):**
-```bash
-curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-  "https://api.github.com/graphql" \
-  -d '{"query":"mutation{resolveReviewThread(input:{threadId:\"<node_id>\"}){thread{isResolved}}}"}'
-```
-If node ID unavailable → REPLY with body `"Resolved."` and note limitation.
-
----
-
-## APPROVE
-
-Approve the MR/PR.
-
-**GitLab:**
-```bash
-curl -s -X POST -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-  "https://sgts.gitlab-dedicated.com/api/v4/projects/<encoded-project>/merge_requests/<MR_ID>/approve"
-```
-
-**GitHub:**
-```bash
-curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-  "https://api.github.com/repos/<owner>/<repo>/pulls/<PR_ID>/reviews" \
-  -d '{"commit_id":"'"$HEAD_SHA"'","event":"APPROVE","body":"All threads addressed. LGTM!"}'
-```
+Use [TOOL:run-command] to execute curl commands for each operation.

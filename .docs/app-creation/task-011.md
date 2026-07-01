@@ -1,18 +1,24 @@
-# Task 011 — Image paste support (multimodal)
+# Task 011 — Session Management
 
 ## Goal
-Enable image input in the terminal (paste or file path) sent as base64 multimodal message to Claude.
+Implement multi-session support with isolated state (conversation, memory, config) per session ID.
 
 ## Prerequisites
-- [x] task-003 (TUI input handling)
-- [x] task-002 (LLM client supports multimodal format)
+- [ ] task-006 (context manager)
+- [ ] task-010 (memory system)
 
 ## Tasks
-- [x] tui: Detect image paste (iTerm2/Kitty protocol) or `@image.png` file reference — `application/src/tui/input.rs`
-- [x] llm: Build multimodal message payload (image_url with base64 data URI) — `application/src/llm/client.rs`
-- [x] test: Image file read + base64 encoding — `application/tests/image_input_test.rs`
+- [ ] session: Define Session interface (id, contextManager, memory, config, createdAt) — `application/src/session/index.ts`
+- [ ] session: Implement session context (per-session state isolation, shared config) — `application/src/session/context.ts`
+- [ ] session: Implement session manager (create, get, list, destroy sessions) — `application/src/session/index.ts`
+- [ ] session: Generate unique session IDs — `application/src/session/index.ts`
+- [ ] test: Creating session initializes isolated state — `application/tests/session.test.ts`
+- [ ] test: Multiple sessions maintain independent conversation context — `application/tests/session.test.ts`
+- [ ] test: Sessions share config but isolate memory and context — `application/tests/session.test.ts`
 
 ## Done When
-- User can reference an image file (`@screenshot.png`)
-- Image is base64 encoded and sent in multimodal format
-- Claude responds about the image content
+- `sessionManager.create()` returns new session with unique ID
+- Each session has its own context manager and memory instance
+- Sessions share global config (env vars, skill registry)
+- Session state persists within process lifetime
+- All tests pass

@@ -1,20 +1,22 @@
-# Task 010 — Multi-session support
+# Task 010 — Memory System
 
 ## Goal
-Implement session isolation so multiple concurrent sessions can run (for future Slack/Telegram integration).
+Implement markdown-based memory store with read/write/prune operations and 8K token budget enforcement.
 
 ## Prerequisites
-- [x] task-005 (basic chat loop)
-- [x] task-009 (memory system)
+- [ ] task-001 (project scaffolding)
 
 ## Tasks
-- [x] session: Session manager (create, list, resume, destroy) — `application/src/session/mod.rs`
-- [x] session: Per-session context isolation (history, memory, state) — `application/src/session/context.rs`
-- [x] main: CLI flag `--session-id` for explicit session targeting — `application/src/main.rs`
-- [x] test: Multiple sessions maintain isolated state — `application/tests/session_test.rs`
+- [ ] memory: Implement memory store (read/write/append markdown file) — `application/src/memory/store.ts`
+- [ ] memory: Implement 8K token pruner (count tokens, remove oldest entries when over budget) — `application/src/memory/pruner.ts`
+- [ ] memory: Implement memory manager (load at session start, save during session, auto-prune) — `application/src/memory/index.ts`
+- [ ] test: Store reads and writes markdown entries correctly — `application/tests/memory-store.test.ts`
+- [ ] test: Pruner removes oldest entries when exceeding 8K tokens — `application/tests/memory-pruner.test.ts`
+- [ ] test: Memory manager auto-prunes on write when budget exceeded — `application/tests/memory.test.ts`
 
 ## Done When
-- Each session has unique ID
-- Conversation history isolated per session
-- Memory can be per-session or shared (configurable)
-- Sessions persist to disk (resumable)
+- `memory.read()` returns current memory contents as string
+- `memory.append(entry)` adds timestamped entry to memory file
+- `memory.prune()` removes oldest entries until under 8K tokens
+- Memory file persists between sessions (markdown in project dir)
+- All tests pass

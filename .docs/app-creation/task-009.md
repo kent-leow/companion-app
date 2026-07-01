@@ -1,22 +1,26 @@
-# Task 009 — Memory system (local, self-pruning)
+# Task 009 — Sub-Agent System
 
 ## Goal
-Implement local markdown-based memory with 8K token budget and self-pruning.
+Implement sub-agent spawning: prompt builder with role/context injection, concurrent execution pool, and result collection.
 
 ## Prerequisites
-- [x] task-005 (basic chat loop, so memory can be used in context)
+- [ ] task-002 (LLM client)
+- [ ] task-003 (action parser)
+- [ ] task-006 (context manager for summary injection)
 
 ## Tasks
-- [x] memory: Memory manager (load, save, query) — `application/src/memory/mod.rs`
-- [x] memory: Markdown file store (read/write memory entries) — `application/src/memory/store.rs`
-- [x] memory: Token-aware pruner (tiktoken-rs, 8K cap, importance scoring) — `application/src/memory/pruner.rs`
-- [x] main: Load memory at session start, inject into context — `application/src/main.rs`
-- [x] main: Update memory during session (LLM can request memory writes) — `application/src/main.rs`
-- [x] test: Pruner respects 8K token limit — `application/tests/pruner_test.rs`
-- [x] test: Memory persists across sessions — `application/tests/memory_store_test.rs`
+- [ ] agent: Define SubAgentSpec interface (role, task, modelHint, skill, contextNeeded) — `application/src/agent/index.ts`
+- [ ] agent: Implement prompt builder (sub-agent core.md variant + role + task + context summary + tools subset) — `application/src/agent/prompt-builder.ts`
+- [ ] agent: Implement agent pool (Promise.all with per-agent timeout, collect results) — `application/src/agent/pool.ts`
+- [ ] agent: Implement sub-agent execution (own action loop — TOOL + RESPOND only, no recursive SUBAGENT) — `application/src/agent/index.ts`
+- [ ] test: Prompt builder produces correct system/user messages with role and context — `application/tests/agent-prompt.test.ts`
+- [ ] test: Pool runs agents concurrently and collects results — `application/tests/agent-pool.test.ts`
+- [ ] test: Sub-agent cannot spawn nested sub-agents — `application/tests/agent-pool.test.ts`
 
 ## Done When
-- Memory loaded at startup and injected into LLM context
-- New facts stored during conversation
-- Pruner keeps memory under 8K tokens (drops lowest-importance entries)
-- Memory persists to disk between sessions
+- `[SUBAGENT:researcher] {"task": "Find X"}` parsed by orchestrator → spawns sub-agent with focused prompt
+- Multiple sub-agents run via Promise.all, results collected
+- Each sub-agent gets: sub-agent core.md + role + task + 50-200 token context summary
+- Sub-agents can use [TOOL] but NOT [SUBAGENT]
+- Timed-out agents return partial result or error
+- All tests pass

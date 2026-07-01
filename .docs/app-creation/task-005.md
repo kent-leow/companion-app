@@ -1,21 +1,24 @@
-# Task 005 — Basic chat loop (end-to-end)
+# Task 005 — Skill Executor & Matcher
 
 ## Goal
-Wire TUI + LLM client into a working chat loop: user types → send to gateway → stream response back.
+Implement skill command execution (child_process spawn with timeout) and intent-to-skill matching via trigger keywords.
 
 ## Prerequisites
-- [x] task-002 (LLM client)
-- [x] task-003 (TUI)
-- [x] task-004 (core.md loading)
+- [ ] task-004 (skill schema, loader, registry)
 
 ## Tasks
-- [x] main: Wire input → LLM client → output in main loop — `application/src/main.rs`
-- [x] tui: Handle Ctrl+C, `/exit`, conversation history display — `application/src/tui/mod.rs`
-- [x] llm: Maintain conversation history (messages array) per session — `application/src/llm/client.rs`
-- [x] test: E2E covered by smoke_test + SSE parsing tests (mock server blocked by sandbox)
+- [ ] executor: Implement command template interpolation (replace `{param}` placeholders) — `application/src/skills/executor.ts`
+- [ ] executor: Implement `executeSkill(skill, params)` — spawn shell command, capture stdout/stderr, enforce timeout — `application/src/skills/executor.ts`
+- [ ] executor: Return structured result (stdout, stderr, exitCode, timedOut) — `application/src/skills/executor.ts`
+- [ ] matcher: Implement `matchSkill(query, registry)` — keyword matching against triggers + description — `application/src/skills/matcher.ts`
+- [ ] test: Executor interpolates params into template correctly — `application/tests/skill-executor.test.ts`
+- [ ] test: Executor kills process on timeout — `application/tests/skill-executor.test.ts`
+- [ ] test: Matcher returns correct skill for trigger keywords — `application/tests/skill-matcher.test.ts`
+- [ ] test: Matcher returns null for unmatched queries — `application/tests/skill-matcher.test.ts`
 
 ## Done When
-- User can have multi-turn conversation in terminal
-- Responses stream in real-time
-- Ctrl+C or `/exit` cleanly exits
-- Conversation history maintained across turns
+- `executeSkill(skill, {query: "test"})` spawns command with substituted params
+- Timed-out commands return `{timedOut: true}` within configured timeout + 1s
+- `matchSkill("search the web for X", registry)` returns web-search skill
+- `matchSkill("random unrelated input", registry)` returns null
+- All tests pass

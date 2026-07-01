@@ -6,11 +6,20 @@ dist/
 .DS_Store
 thumbs.db
 
-# Rust
-target/
-**/*.rs.bk
-*.pdb
-Cargo.lock
+# Build artifacts
+*.tsbuildinfo
 
 # Session data
 .sessions/
+
+# Test coverage
+coverage/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+*.swp
+*.swo

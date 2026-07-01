@@ -1,20 +1,22 @@
-# Task 002 — LLM client (Platform AI gateway)
+# Task 002 — LLM Client
 
 ## Goal
-Implement the HTTP client that calls the Platform AI gateway (OpenAI-compatible) with streaming SSE support.
+Implement the OpenAI-compatible API client for Platform AI gateway with SSE streaming and model selection.
 
 ## Prerequisites
-- [x] task-001 (project scaffold)
+- [ ] task-001 (config/env loaded)
 
 ## Tasks
-- [x] llm: Create LLM client abstraction — `application/src/llm/mod.rs`
-- [x] llm: Implement OpenAI-compatible HTTP client with SSE streaming — `application/src/llm/client.rs`
-- [x] llm: Model selector (Haiku/Sonnet/Opus routing logic) — `application/src/llm/model_selector.rs`
-- [x] config: Load `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` from env — `application/src/config/env.rs`
-- [x] test: Unit test model selector logic — `application/tests/model_selector_test.rs`
-- [x] test: SSE parsing tests for streaming client — `application/tests/client_test.rs`
+- [ ] llm: Create LLM client abstraction with `chat()` method — `application/src/llm/index.ts`
+- [ ] llm: Implement OpenAI-compatible HTTP client (POST /v1/chat/completions, x-api-key header) — `application/src/llm/client.ts`
+- [ ] llm: Implement SSE stream parser (ReadableStream → token-by-token async iterable) — `application/src/llm/streaming.ts`
+- [ ] llm: Implement model selector (Haiku for simple, Sonnet default, Opus for complex) — `application/src/llm/model-selector.ts`
+- [ ] test: Client sends correct headers/body format — `application/tests/client.test.ts`
+- [ ] test: Stream parser yields tokens from SSE chunks — `application/tests/streaming.test.ts`
+- [ ] test: Model selector picks correct model by complexity — `application/tests/model-selector.test.ts`
 
 ## Done When
-- Can send a message to Platform AI gateway and receive streamed response
-- Model selector returns correct model ID based on complexity hint
-- Tests pass with mock HTTP server
+- `client.chat(messages, {stream: true})` returns async iterable of tokens
+- `client.chat(messages, {stream: false})` returns full response string
+- Model selector returns `bedrock.claude-haiku-4-5` / `bedrock.claude-sonnet-4-6` / `bedrock.claude-opus-4-6` based on input classification
+- All tests pass

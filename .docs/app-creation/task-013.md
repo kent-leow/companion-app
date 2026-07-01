@@ -1,20 +1,26 @@
-# Task 013 — Smart model routing integration
+# Task 013 — Auth-Required Skills
 
 ## Goal
-Wire the model selector into the orchestrator so it automatically picks Haiku/Sonnet/Opus based on task complexity.
+Create the 6 auth-required skill.md files with their supporting scripts: figma-design-context, fix-vulnerabilities, git-apis, git-workflow, gitlab-mr-automation, jira-ticket.
 
 ## Prerequisites
-- [x] task-006 (orchestrator)
-- [x] task-002 (model selector)
+- [ ] task-004 (skill schema/loader)
+- [ ] task-005 (skill executor)
+- [ ] task-012 (default skills pattern established)
 
 ## Tasks
-- [x] orchestrator: Pass complexity assessment to model selector — `application/src/orchestrator/mod.rs`
-- [x] llm: Model selector uses heuristics (token count, keyword detection, planner hint) — `application/src/llm/model_selector.rs`
-- [x] agent: Sub-agents use model_hint from planner output — `application/src/agent/mod.rs`
-- [x] test: Routing logic selects expected model per scenario — `application/tests/model_routing_test.rs`
+- [ ] skill: Create figma-design-context/skill.md + scripts (get-metadata.sh, get-screenshot.sh, get-design-context.sh) — `application/skills/figma-design-context/`
+- [ ] skill: Create fix-vulnerabilities/skill.md (GitLab vulnerability fetch, report-only) — `application/skills/fix-vulnerabilities/skill.md`
+- [ ] skill: Create git-apis/skill.md (discussions, comments, resolve, approve) — `application/skills/git-apis/skill.md`
+- [ ] skill: Create git-workflow/skill.md (branch, commit, push, MR, pipeline poll) — `application/skills/git-workflow/skill.md`
+- [ ] skill: Create gitlab-mr-automation/skill.md (full lifecycle) — `application/skills/gitlab-mr-automation/skill.md`
+- [ ] skill: Create jira-ticket/skill.md + scripts (create-ticket.sh, get-comments.sh, get-fields.sh) — `application/skills/jira-ticket/`
+- [ ] test: All 6 auth skills load via registry (with auth warnings for missing tokens) — `application/tests/auth-skills.test.ts`
+- [ ] test: Preflight commands detect missing env vars correctly — `application/tests/auth-skills.test.ts`
 
 ## Done When
-- Simple "what time is it" → Haiku
-- Standard coding question → Sonnet
-- Complex multi-step reasoning → Opus
-- Sub-agents respect planner's model_hint
+- All 6 skills have valid YAML frontmatter matching SkillDef schema
+- Registry logs warnings for skills with missing auth env vars
+- Preflight commands report OK/MISSING status correctly
+- Shell scripts in figma + jira directories are executable
+- All tests pass
