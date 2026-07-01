@@ -1,12 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash",
-      "Read",
-      "Write",
-      "Edit",
-      "WebFetch",
-      "WebSearch"
-    ]
-  }
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "WebFetch(*)",
+      "WebSearch(*)"
+    ],
+    "deny": [],
+    "defaultMode": "bypassPermissions"
+  },
+  "enableAllProjectMcpServers": true
 }
