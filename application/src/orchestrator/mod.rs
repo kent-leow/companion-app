@@ -43,8 +43,8 @@ impl Orchestrator {
             .map(|m| m.content.as_str().unwrap_or_default().to_string())
             .unwrap_or_default();
 
-        if self.needs_web_search(&user_msg) {
-            return self.handle_with_skill(&user_msg, "web-search").await;
+        if self.needs_web_search(&user_msg, history) {
+            return self.handle_with_skill(history, "web-search").await;
         }
 
         if self.is_simple_query(&user_msg) {
@@ -86,16 +86,50 @@ impl Orchestrator {
         Ok(synthesis)
     }
 
-    fn needs_web_search(&self, input: &str) -> bool {
+    fn needs_web_search(&self, input: &str, history: &[ChatMessage]) -> bool {
+        if self.skills.get("web-search").is_none() {
+            return false;
+        }
+
         let lower = input.to_lowercase();
-        let realtime_signals = [
-            "latest", "today", "current", "recent", "now", "this week",
-            "this month", "yesterday", "tonight", "score", "result",
-            "news", "update", "happening", "weather", "price",
-            "stock", "match", "game", "election", "live",
+
+        // Follow-up references to prior context should NOT trigger search
+        let followup_signals = [
+            "you mentioned", "you said", "what about", "which one",
+            "tell me more", "elaborate", "explain", "why",
         ];
-        realtime_signals.iter().any(|s| lower.contains(s))
-            && self.skills.get("web-search").is_some()
+        if followup_signals.iter().any(|s| lower.contains(s)) {
+            return false;
+        }
+
+        // Only trigger on first user message or when explicitly asking for fresh info
+        let has_prior_context = history
+            .iter()
+            .filter(|m| m.role == crate::llm::Role::Assistant)
+            .count()
+            > 0;
+
+        let strong_realtime_signals = [
+            "latest", "today", "current", "right now", "this week",
+            "this month", "yesterday", "tonight", "happening",
+            "weather", "price", "stock", "election", "live",
+        ];
+
+        let weak_realtime_signals = [
+            "score", "result", "news", "update", "match", "game",
+        ];
+
+        // Strong signals always trigger search
+        if strong_realtime_signals.iter().any(|s| lower.contains(s)) {
+            return true;
+        }
+
+        // Weak signals only trigger on first query (no prior context)
+        if !has_prior_context && weak_realtime_signals.iter().any(|s| lower.contains(s)) {
+            return true;
+        }
+
+        false
     }
 
     fn is_simple_query(&self, input: &str) -> bool {
@@ -103,13 +137,20 @@ impl Orchestrator {
         word_count <= 10 && !input.contains("and") && !input.contains("then")
     }
 
-    async fn handle_with_skill(&self, query: &str, skill_name: &str) -> Result<String> {
+    async fn handle_with_skill(&self, history: &[ChatMessage], skill_name: &str) -> Result<String> {
         let skill = self
             .skills
             .get(skill_name)
             .ok_or_else(|| anyhow::anyhow!("skill '{}' not found", skill_name))?;
 
-        let search_query = self.extract_search_query(query).await?;
+        let user_msg = history
+            .iter()
+            .rev()
+            .find(|m| m.role == crate::llm::Role::User)
+            .map(|m| m.content.as_str().unwrap_or_default().to_string())
+            .unwrap_or_default();
+
+        let search_query = self.extract_search_query(&user_msg).await?;
         let raw_results =
             crate::skills::executor::SkillExecutor::execute(skill, &search_query)
                 .unwrap_or_else(|e| format!("ERROR: search failed: {}", e));
@@ -118,22 +159,29 @@ impl Orchestrator {
             && !raw_results.contains("ERROR")
             && !raw_results.contains("unavailable");
 
+        // Build messages preserving full conversation history
+        let mut messages: Vec<ChatMessage> = Vec::new();
+
         let system_prompt = if has_results {
             format!(
-                "{}\n\n{}\n\nUser asked: {}\n\nSearch results:\n{}",
-                &self.core_context, &skill.prompt, query, raw_results
+                "{}\n\n{}\n\nWeb search results for context:\n{}",
+                &self.core_context, &skill.prompt, raw_results
             )
         } else {
             format!(
-                "{}\n\nUser asked: {}\n\nWeb search was attempted but failed (network restriction or rate limit). You MUST:\n1. Acknowledge you cannot fetch live results right now\n2. Provide whatever relevant knowledge you have (with caveat it may be outdated)\n3. Suggest where the user can check for live info",
-                &self.core_context, query
+                "{}\n\nWeb search was attempted but failed (network restriction or rate limit). Acknowledge this limitation, provide what you know (with caveat it may be outdated), and suggest where to check for live info.",
+                &self.core_context
             )
         };
 
-        let messages = vec![
-            ChatMessage::system(&system_prompt),
-            ChatMessage::user("Answer the user's question based on the available information."),
-        ];
+        messages.push(ChatMessage::system(&system_prompt));
+
+        // Include conversation history (skip the original system message)
+        for msg in history.iter() {
+            if msg.role != crate::llm::Role::System {
+                messages.push(msg.clone());
+            }
+        }
 
         let model = self.model_selector.select(Complexity::Medium);
         self.client.chat(model, &messages, 2048).await
